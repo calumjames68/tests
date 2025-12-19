@@ -1,1 +1,896 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Toolkit Hub</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        bt: {
+                            500: '#5514b4',
+                            600: '#3a0c7e',
+                            50: '#f4effd'
+                        },
+                        ee: {
+                            500: '#007b85',
+                            600: '#005f66',
+                            50: '#e0f7fa'
+                        },
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 15px rgba(85, 20, 180, 0.3)'
+                    }
+                }
+            }
+        }
+    </script>
 
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Layout Utilities */
+        body { height: 100%; overflow: hidden; }
+        .tab-content { display: none; height: 100%; overflow-y: auto; scroll-behavior: smooth; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glassmorphism for inputs in dark mode */
+        .dark .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 flex transition-colors duration-200">
+
+    <!-- SIDEBAR -->
+    <aside class="w-20 lg:w-64 bg-white dark:bg-slate-850 border-r border-gray-200 dark:border-slate-800 flex flex-col justify-between z-20 transition-all duration-300 flex-shrink-0">
+        <div>
+            <!-- Header -->
+            <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-100 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-bt-500 to-ee-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    A
+                </div>
+                <span class="ml-3 font-bold text-lg hidden lg:block tracking-tight">Agent<span class="text-bt-500">Hub</span></span>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="p-2 space-y-1 mt-4">
+                <button onclick="app.setTab('text-gen')" class="nav-btn group w-full flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400" data-tab="text-gen">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">💬</span>
+                    <span class="ml-3 font-medium hidden lg:block">Text Generator</span>
+                </button>
+                
+                <button onclick="app.setTab('note-gen')" class="nav-btn group w-full flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 active-nav text-bt-500 bg-bt-50 dark:bg-bt-500/10" data-tab="note-gen">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">📝</span>
+                    <span class="ml-3 font-medium hidden lg:block">Note Generator</span>
+                </button>
+
+                <button onclick="app.setTab('utilities')" class="nav-btn group w-full flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400" data-tab="utilities">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🛠️</span>
+                    <span class="ml-3 font-medium hidden lg:block">Utilities</span>
+                </button>
+
+                <button onclick="app.setTab('bug-board')" class="nav-btn group w-full flex items-center p-3 rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400" data-tab="bug-board">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🐛</span>
+                    <span class="ml-3 font-medium hidden lg:block">Bug Board</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Footer / Theme Toggle -->
+        <div class="p-4 border-t border-gray-100 dark:border-slate-800">
+            <button onclick="app.toggleTheme()" class="w-full flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-gray-500 dark:text-gray-400">
+                <span id="theme-icon" class="text-xl">🌙</span>
+                <span class="ml-3 font-medium hidden lg:block" id="theme-text">Dark Mode</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 relative h-full bg-gray-50 dark:bg-slate-900 overflow-hidden">
+        
+        <!-- HEADER (Mobile/Tablet title) -->
+        <header class="h-16 bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 flex items-center px-6 justify-between lg:justify-end sticky top-0 z-10">
+            <span class="lg:hidden font-bold text-lg">AgentHub</span>
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-mono text-gray-400" id="clock">00:00</span>
+                <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">AG</div>
+            </div>
+        </header>
+
+        <!-- APP: TEXT GENERATOR -->
+        <div id="tab-text-gen" class="tab-content p-4 lg:p-8">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left: Configuration -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- Brand Selection -->
+                    <div class="bg-white dark:bg-slate-850 rounded-2xl p-6 shadow-soft">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">1. Select Brand</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="brand" value="BT" class="peer sr-only" onchange="textGen.updateUI()">
+                                <div class="h-24 rounded-xl border-2 border-gray-100 dark:border-slate-700 peer-checked:border-bt-500 peer-checked:bg-bt-50 dark:peer-checked:bg-bt-500/10 flex flex-col items-center justify-center transition-all">
+                                    <div class="font-bold text-2xl text-gray-400 peer-checked:text-bt-500">BT</div>
+                                    <div class="text-xs text-gray-400 mt-1">Purple Theme</div>
+                                </div>
+                                <div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-bt-500">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="brand" value="EE" class="peer sr-only" onchange="textGen.updateUI()">
+                                <div class="h-24 rounded-xl border-2 border-gray-100 dark:border-slate-700 peer-checked:border-ee-500 peer-checked:bg-ee-50 dark:peer-checked:bg-ee-500/10 flex flex-col items-center justify-center transition-all">
+                                    <div class="font-bold text-2xl text-gray-400 peer-checked:text-ee-500">EE</div>
+                                    <div class="text-xs text-gray-400 mt-1">Teal Theme</div>
+                                </div>
+                                <div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-ee-500">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Template Selection -->
+                    <div id="text-gen-controls" class="bg-white dark:bg-slate-850 rounded-2xl p-6 shadow-soft opacity-50 pointer-events-none transition-all duration-300">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">2. Message Details</h2>
+                        
+                        <!-- Tabs -->
+                        <div class="flex space-x-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg mb-6">
+                            <button class="flex-1 py-2 text-sm font-medium rounded-md shadow bg-white dark:bg-slate-700 dark:text-white transition-all" id="btn-type-pre" onclick="textGen.setType('pre')">General / Pre-Call</button>
+                            <button class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-all" id="btn-type-post" onclick="textGen.setType('post')">Delays / Post-Call</button>
+                        </div>
+
+                        <!-- Contact Toggle -->
+                        <div id="contact-toggle-wrap" class="hidden mb-6 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-gray-100 dark:border-slate-700">
+                            <span class="block text-sm font-medium mb-2">Did you speak to the customer?</span>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="contact" value="Yes" onchange="textGen.renderPreview()" class="accent-bt-500"> <span class="text-sm">Yes</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="contact" value="No" onchange="textGen.renderPreview()" class="accent-bt-500"> <span class="text-sm">No (Voicemail/Msg)</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Search & Dropdown -->
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-gray-400">🔍</span>
+                            <input type="text" id="template-search" placeholder="Search templates (e.g. 'Duct', 'Order', 'Welcome')..." 
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-bt-500 focus:border-transparent outline-none transition-all dark:text-white"
+                                oninput="textGen.filterTemplates()" onfocus="textGen.filterTemplates()">
+                            
+                            <div id="template-dropdown" class="hidden absolute w-full mt-2 max-h-60 overflow-y-auto bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-xl z-20">
+                                <!-- Items injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Inputs (Date) -->
+                        <div id="dynamic-inputs" class="mt-4 hidden animate-fadeIn">
+                            <label class="block text-xs font-bold uppercase text-bt-500 mb-1">Update Date Required</label>
+                            <input type="date" id="template-date" class="w-full p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:border-bt-500 dark:text-white" onchange="textGen.renderPreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Preview -->
+                <div class="lg:col-span-5">
+                    <div class="sticky top-24">
+                        <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft overflow-hidden border border-gray-100 dark:border-slate-800">
+                            <div class="bg-gray-50 dark:bg-slate-800 p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                                <span class="text-xs font-bold text-gray-400 uppercase">Preview</span>
+                                <div class="flex gap-2">
+                                    <button onclick="textGen.copy()" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md transition text-gray-500" title="Copy"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg></button>
+                                    <button onclick="textGen.sendToNote()" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md transition text-blue-500" title="Send to Notes"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg></button>
+                                </div>
+                            </div>
+                            
+                            <!-- Phone Screen Mock -->
+                            <div class="p-6 bg-white dark:bg-slate-900 min-h-[300px] flex flex-col relative">
+                                <!-- Dynamic Bubble -->
+                                <div id="preview-bubble" class="self-end max-w-[90%] p-4 rounded-2xl rounded-tr-sm bg-gray-100 dark:bg-slate-800 text-gray-400 text-sm leading-relaxed transition-all duration-300">
+                                    Select options to generate message...
+                                </div>
+                                <div class="mt-auto text-right text-xs text-gray-400 pt-4" id="char-count">0 chars</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: NOTE GENERATOR (IMPROVED) -->
+        <div id="tab-note-gen" class="tab-content active p-4 lg:p-8">
+            <div class="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                
+                <!-- COLUMN 1: STRUCTURED INPUTS -->
+                <div class="lg:col-span-3 space-y-6">
+                    <div class="bg-white dark:bg-slate-850 rounded-2xl p-5 shadow-soft">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">1. Interaction Details</h2>
+                        
+                        <!-- Mode Select -->
+                        <div class="flex gap-2 mb-4 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg">
+                            <button onclick="noteGen.setMode('Offline')" id="btn-mode-offline" class="flex-1 py-1.5 text-xs font-bold rounded shadow bg-white dark:bg-slate-700 dark:text-white transition-all">Offline</button>
+                            <button onclick="noteGen.setMode('DI')" id="btn-mode-di" class="flex-1 py-1.5 text-xs font-bold rounded text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">DI</button>
+                        </div>
+
+                        <!-- OFFLINE FIELDS -->
+                        <div id="ng-fields-offline" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Error Code</label>
+                                <div class="relative">
+                                    <input type="text" id="ng-err1" placeholder="Search (e.g. 521)" class="w-full p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-sm outline-none focus:border-bt-500 dark:text-white" oninput="noteGen.searchErrors(this)">
+                                    <div class="absolute w-full mt-1 max-h-40 overflow-y-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl z-20 hidden error-results"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Delay Reason</label>
+                                <select id="ng-reason" class="w-full p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-sm outline-none dark:text-white" onchange="noteGen.generate()">
+                                    <option value="">Select Reason...</option>
+                                    <option>External Ducting</option>
+                                    <option>Engineer Shortage</option>
+                                    <option>Wayleave Issue</option>
+                                    <option>Damaged Cabinet</option>
+                                    <option>No Capacity</option>
+                                    <option>Planning/Design</option>
+                                </select>
+                            </div>
+
+                            <!-- Added Contact Status Fields -->
+                            <div class="pt-2 border-t border-gray-100 dark:border-slate-800">
+                                <label class="block text-xs font-medium text-gray-500 mb-2">Contact Status</label>
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex gap-4">
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs"><input type="radio" name="ng-ans" value="Yes" class="accent-bt-500" onchange="noteGen.generate()"> Answered</label>
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs"><input type="radio" name="ng-ans" value="No" class="accent-bt-500" onchange="noteGen.generate()"> No Answer</label>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-gray-500"><input type="checkbox" id="ng-sms-pre" class="accent-bt-500" onchange="noteGen.generate()"> Pre-SMS</label>
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-gray-500"><input type="checkbox" id="ng-sms-post" class="accent-bt-500" onchange="noteGen.generate()"> Post-SMS</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-2 border-t border-gray-100 dark:border-slate-800">
+                                <label class="block text-xs font-medium text-gray-500 mb-2">Outcome Tags</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <label class="cursor-pointer text-xs px-2 py-1 rounded border border-gray-200 dark:border-slate-700 hover:border-bt-500 dark:hover:border-bt-500 select-none transition-colors"><input type="checkbox" id="ng-tag-res" class="hidden" onchange="this.parentElement.classList.toggle('bg-bt-50'); this.parentElement.classList.toggle('border-bt-500'); noteGen.generate()"> #Resolved</label>
+                                    <label class="cursor-pointer text-xs px-2 py-1 rounded border border-gray-200 dark:border-slate-700 hover:border-bt-500 dark:hover:border-bt-500 select-none transition-colors"><input type="checkbox" id="ng-tag-mob" class="hidden" onchange="this.parentElement.classList.toggle('bg-bt-50'); this.parentElement.classList.toggle('border-bt-500'); noteGen.generate()"> #NoMobile</label>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Reference</label>
+                                <input type="text" id="ng-ref" placeholder="Ref/Order #" class="w-full p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-sm outline-none focus:border-bt-500 dark:text-white" oninput="noteGen.generate()">
+                            </div>
+                        </div>
+
+                        <!-- DI FIELDS -->
+                        <div id="ng-fields-di" class="space-y-4 hidden">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Origin</label>
+                                <div class="flex gap-2">
+                                    <label class="flex-1 cursor-pointer text-xs text-center p-2 rounded border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700"><input type="radio" name="ng-di-org" value="Guide" checked class="hidden" onchange="noteGen.generate(); this.parentElement.classList.add('bg-bt-50','border-bt-500'); this.parentElement.nextElementSibling.classList.remove('bg-bt-50','border-bt-500')"> Guide</label>
+                                    <label class="flex-1 cursor-pointer text-xs text-center p-2 rounded border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700"><input type="radio" name="ng-di-org" value="Direct" class="hidden" onchange="noteGen.generate(); this.parentElement.classList.add('bg-bt-50','border-bt-500'); this.parentElement.previousElementSibling.classList.remove('bg-bt-50','border-bt-500')"> Direct</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Flow</label>
+                                <select id="ng-di-flow" class="w-full p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-sm outline-none dark:text-white" onchange="noteGen.generate()">
+                                    <option>Billing</option>
+                                    <option>Faults</option>
+                                    <option>Orders</option>
+                                    <option>Tech Support</option>
+                                </select>
+                            </div>
+                            <input type="text" id="ng-di-sum" placeholder="Issue Summary..." class="w-full p-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-sm outline-none focus:border-bt-500 dark:text-white" oninput="noteGen.generate()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: EDITOR & SNIPPETS -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white dark:bg-slate-850 rounded-2xl p-5 shadow-soft h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500">2. Additional Notes</h2>
+                            <button onclick="noteGen.clearNotes()" class="text-xs text-red-400 hover:text-red-600 transition-colors">Clear Text</button>
+                        </div>
+                        
+                        <!-- Quick Snippets -->
+                        <div class="flex flex-wrap gap-2 mb-4" id="ng-snippets">
+                            <!-- Injected by JS -->
+                        </div>
+
+                        <!-- Main Editor -->
+                        <textarea id="ng-notes" class="flex-1 w-full p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-bt-500/20 focus:border-bt-500 font-mono text-sm leading-relaxed dark:text-white resize-none" placeholder="Type notes here... (Snippets above append here)" oninput="noteGen.generate()"></textarea>
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: PREVIEW & HISTORY -->
+                <div class="lg:col-span-4 space-y-6">
+                    
+                    <!-- Output Card -->
+                    <div class="bg-slate-900 text-slate-300 rounded-2xl p-5 shadow-xl flex flex-col h-[60%] relative group">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-700 pb-2">
+                            <span class="text-xs font-mono text-slate-500 uppercase">Live Output (Editable)</span>
+                            <div class="flex gap-2">
+                                <span id="save-status" class="text-[10px] text-slate-600 transition-opacity opacity-0">Saved</span>
+                                <button onclick="noteGen.copy()" class="text-xs bg-bt-600 hover:bg-bt-500 text-white px-3 py-1 rounded transition shadow-glow">Copy Note</button>
+                            </div>
+                        </div>
+                        <textarea id="ng-preview" class="flex-1 w-full bg-transparent border-0 outline-none font-mono text-xs resize-none text-slate-300 focus:text-white" spellcheck="false"></textarea>
+                    </div>
+
+                    <!-- History Panel -->
+                    <div class="bg-white dark:bg-slate-850 rounded-2xl p-5 shadow-soft h-[35%] flex flex-col">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm text-gray-700 dark:text-gray-200">Recent History</h3>
+                            <button onclick="noteGen.clearHistory()" class="text-[10px] text-gray-400 hover:text-red-500">Clear</button>
+                        </div>
+                        <div id="ng-history-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                            <!-- Injected Items -->
+                            <div class="text-center text-xs text-gray-400 mt-4 italic">No recent notes.</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: UTILITIES -->
+        <div id="tab-utilities" class="tab-content p-4 lg:p-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-8 relative">
+                    <input type="text" id="util-search" placeholder="Search tools..." class="w-full md:w-96 pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-850 focus:ring-2 focus:ring-bt-500 outline-none dark:text-white shadow-soft" oninput="utilities.filter()">
+                    <span class="absolute left-3 top-3.5 text-gray-400">🔍</span>
+                </div>
+
+                <div id="util-grid" class="space-y-8">
+                    <!-- Sections injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: BUG BOARD -->
+        <div id="tab-bug-board" class="tab-content h-full p-0 overflow-hidden">
+            <iframe src="https://calumjames68.github.io/TEXTGEN4/" class="w-full h-full border-0" title="Bug Board"></iframe>
+        </div>
+
+    </main>
+
+    <!-- Global Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <span class="text-green-400">✓</span> <span id="toast-msg">Action Successful</span>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // --- DATA SOURCE ---
+        const DATA = {
+            templates: {
+                pre: [
+                    { id: 'gen', text: 'General Account Call', bt: "regarding your account. I'll call you shortly from an 0800 number.", ee: "regarding your account. I'll call shortly from an 0800 number." },
+                    { id: 'ord', text: 'Issue with Order', bt: "we need to discuss an issue with your order. I'll call shortly.", ee: "we need to discuss an issue with your order. I'll call shortly." },
+                    { id: 'eng', text: 'Book Engineer', bt: "I'm calling to book your engineer appointment. I'll call shortly.", ee: "I'm calling to book your engineer. I'll call shortly." }
+                ],
+                post: [
+                    { id: 'duct', text: 'Ducting Issue (12 Wks)', delay: 84, bt: "External ducting issues mean your install is delayed up to 12 weeks. Update by {date}.", ee: "Ducting work is needed, taking up to 12 weeks. Update by {date}." },
+                    { id: 'eng_short', text: 'Engineer Shortage (4 Wks)', delay: 28, bt: "Engineer shortages have delayed your install. We expect a 4 week delay. Update by {date}.", ee: "Engineer shortages have caused a delay. Update by {date}." },
+                    { id: 'wayleave', text: 'Wayleave Delay', delay: 40, bt: "We need permission (Wayleave) to work on private land. Update by {date}.", ee: "We need a Wayleave for the install. Update by {date}." },
+                    { id: 'cb', text: 'Book Callback', delay: 0, bt: "Book a callback here: bt.com/callback", ee: "Book a callback here: ee.co.uk/callback" }
+                ]
+            },
+            errorCodes: [
+                { code: '521', desc: 'Changes to appointment' },
+                { code: '586', desc: 'Survey Required' },
+                { code: '2001', desc: 'Details Mismatch' },
+                { code: '101134', desc: 'No Capacity' }
+            ],
+            snippets: [
+                { label: 'Verified', text: 'Customer Verified (Full DPA Passed).' },
+                { label: 'Not Verified', text: 'Customer Failed DPA / Not Account Holder.' },
+                { label: 'Call Dropped', text: 'Call dropped mid-conversation. Attempting call back.' },
+                { label: 'No Answer', text: 'Tried to call customer, no answer. Left voicemail.' },
+                { label: 'Escalated', text: 'Ticket escalated to 2nd Line Support.' },
+                { label: 'Cust Happy', text: 'Customer satisfied with resolution. Ticket closed.' }
+            ],
+            links: [
+                { title: 'Core Systems', items: [
+                    { name: 'Hub / Albert', icon: '👥', url: 'https://hub.intra.bt.com/' },
+                    { name: 'Openreach Portal', icon: '🔧', url: 'https://www.openreach.co.uk/' }
+                ]},
+                { title: 'Tools', items: [
+                    { name: 'One View', icon: '👁️', url: 'https://oneview.bt.com/' },
+                    { name: 'Speed Test', icon: '🚀', url: 'https://fast.com' }
+                ]}
+            ]
+        };
+
+        // --- APP CONTROLLER ---
+        const app = {
+            state: {
+                brand: null,
+                theme: 'light'
+            },
+            
+            init() {
+                // Clock
+                setInterval(() => {
+                    document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                }, 1000);
+
+                // Theme
+                if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    this.setTheme('dark');
+                }
+
+                // Initial Tab
+                this.setTab('text-gen');
+                
+                // Init Modules
+                textGen.init();
+                noteGen.init();
+                utilities.init();
+            },
+
+            setTab(id) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(el => {
+                    el.classList.remove('active-nav', 'bg-bt-50', 'text-bt-500', 'dark:bg-bt-500/10');
+                    el.classList.add('text-gray-500', 'dark:text-gray-400');
+                });
+                
+                document.getElementById('tab-' + id).classList.add('active');
+                const btn = document.querySelector(`button[data-tab="${id}"]`);
+                if(btn) {
+                    btn.classList.add('active-nav', 'bg-bt-50', 'text-bt-500', 'dark:bg-bt-500/10');
+                    btn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                }
+            },
+
+            toggleTheme() {
+                this.setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+            },
+
+            setTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.getElementById('theme-icon').textContent = '☀️';
+                    document.getElementById('theme-text').textContent = 'Light Mode';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.getElementById('theme-icon').textContent = '🌙';
+                    document.getElementById('theme-text').textContent = 'Dark Mode';
+                }
+                localStorage.setItem('theme', theme);
+            },
+
+            toast(msg) {
+                const t = document.getElementById('toast');
+                document.getElementById('toast-msg').textContent = msg;
+                t.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
+            }
+        };
+
+        // --- TEXT GEN MODULE ---
+        const textGen = {
+            currentType: 'pre',
+            selectedTemplate: null,
+
+            init() {
+                document.addEventListener('click', (e) => {
+                    const wrap = document.querySelector('#text-gen-controls');
+                    const dropdown = document.getElementById('template-dropdown');
+                    if (wrap && !wrap.contains(e.target)) dropdown.classList.add('hidden');
+                });
+            },
+
+            updateUI() {
+                const brand = document.querySelector('input[name="brand"]:checked')?.value;
+                if (!brand) return;
+                
+                app.state.brand = brand;
+                const controls = document.getElementById('text-gen-controls');
+                controls.classList.remove('opacity-50', 'pointer-events-none');
+                
+                const bubble = document.getElementById('preview-bubble');
+                bubble.className = `self-end max-w-[90%] p-4 rounded-2xl rounded-tr-sm text-sm leading-relaxed transition-all duration-300 ${brand === 'BT' ? 'bg-bt-500 text-white' : 'bg-ee-500 text-white'}`;
+                
+                this.renderPreview();
+            },
+
+            setType(type) {
+                this.currentType = type;
+                const btnPre = document.getElementById('btn-type-pre');
+                const btnPost = document.getElementById('btn-type-post');
+                const activeClass = 'bg-white dark:bg-slate-700 dark:text-white shadow text-gray-900';
+                const inactiveClass = 'text-gray-500 hover:text-gray-700 dark:text-gray-400';
+                
+                if (type === 'pre') {
+                    btnPre.className = `flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeClass}`;
+                    btnPost.className = `flex-1 py-2 text-sm font-medium rounded-md transition-all ${inactiveClass}`;
+                    document.getElementById('contact-toggle-wrap').classList.add('hidden');
+                } else {
+                    btnPre.className = `flex-1 py-2 text-sm font-medium rounded-md transition-all ${inactiveClass}`;
+                    btnPost.className = `flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeClass}`;
+                    document.getElementById('contact-toggle-wrap').classList.remove('hidden');
+                }
+
+                document.getElementById('template-search').value = '';
+                this.selectedTemplate = null;
+                this.renderPreview();
+            },
+
+            filterTemplates() {
+                const term = document.getElementById('template-search').value.toLowerCase();
+                const dropdown = document.getElementById('template-dropdown');
+                const list = DATA.templates[this.currentType] || [];
+                const matches = list.filter(t => t.text.toLowerCase().includes(term));
+                
+                dropdown.innerHTML = '';
+                dropdown.classList.remove('hidden');
+                
+                if (matches.length === 0) {
+                    dropdown.innerHTML = '<div class="p-3 text-xs text-gray-500">No matches found.</div>';
+                    return;
+                }
+
+                matches.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'p-3 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer text-sm border-b border-gray-100 dark:border-slate-700 last:border-0 dark:text-gray-200';
+                    div.textContent = item.text;
+                    div.onclick = () => this.selectTemplate(item);
+                    dropdown.appendChild(div);
+                });
+            },
+
+            selectTemplate(item) {
+                this.selectedTemplate = item;
+                document.getElementById('template-search').value = item.text;
+                document.getElementById('template-dropdown').classList.add('hidden');
+                const dateWrap = document.getElementById('dynamic-inputs');
+                item.delay > 0 ? dateWrap.classList.remove('hidden') : dateWrap.classList.add('hidden');
+                this.renderPreview();
+            },
+
+            renderPreview() {
+                const bubble = document.getElementById('preview-bubble');
+                if (!app.state.brand || !this.selectedTemplate) {
+                    bubble.textContent = "Select options to generate message...";
+                    return;
+                }
+
+                let text = app.state.brand === 'BT' ? this.selectedTemplate.bt : this.selectedTemplate.ee;
+
+                if (this.selectedTemplate.delay > 0) {
+                    const dateVal = document.getElementById('template-date').value;
+                    let dateStr = "[DATE]";
+                    if (dateVal) {
+                        dateStr = new Date(dateVal).toLocaleDateString('en-GB');
+                    } else {
+                        const d = new Date();
+                        d.setDate(d.getDate() + this.selectedTemplate.delay);
+                        dateStr = d.toLocaleDateString('en-GB');
+                    }
+                    text = text.replace('{date}', dateStr);
+                }
+
+                if (this.currentType === 'post') {
+                    const contact = document.querySelector('input[name="contact"]:checked')?.value;
+                    if (contact === 'No') {
+                        text = "Sorry I missed you. " + text;
+                    } else if (contact === 'Yes' && text.toLowerCase().startsWith('hi')) {
+                        text = text.replace(/^Hi\s*,?\s*/i, '');
+                    }
+                }
+
+                bubble.textContent = text;
+                document.getElementById('char-count').textContent = text.length + ' chars';
+            },
+
+            copy() {
+                const text = document.getElementById('preview-bubble').textContent;
+                if(text.includes('...')) return;
+                navigator.clipboard.writeText(text);
+                app.toast('Message Copied');
+            },
+
+            sendToNote() {
+                const text = document.getElementById('preview-bubble').textContent;
+                if(text.includes('...')) return;
+                const noteArea = document.getElementById('ng-notes');
+                noteArea.value += (noteArea.value ? '\n\n' : '') + `[SMS SENT]: ${text}`;
+                noteGen.generate();
+                app.setTab('note-gen');
+                app.toast('Added to Notes');
+            }
+        };
+
+        // --- NOTE GEN MODULE (IMPROVED) ---
+        const noteGen = {
+            history: [],
+
+            init() {
+                // Render Snippets
+                const snipContainer = document.getElementById('ng-snippets');
+                DATA.snippets.forEach(s => {
+                    const btn = document.createElement('button');
+                    btn.className = "text-[10px] uppercase font-bold px-3 py-1.5 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-bt-500 transition-all text-gray-600 dark:text-gray-300";
+                    btn.textContent = "+ " + s.label;
+                    btn.onclick = () => this.insertSnippet(s.text);
+                    snipContainer.appendChild(btn);
+                });
+
+                // Load History & State
+                const saved = localStorage.getItem('ng_history');
+                if(saved) {
+                    this.history = JSON.parse(saved);
+                    this.renderHistory();
+                }
+                this.loadState();
+                
+                this.generate(); // initial render
+            },
+
+            insertSnippet(text) {
+                const area = document.getElementById('ng-notes');
+                area.value += (area.value ? '\n' : '') + text;
+                this.generate();
+            },
+
+            setMode(mode) {
+                document.getElementById('ng-fields-offline').classList.toggle('hidden', mode !== 'Offline');
+                document.getElementById('ng-fields-di').classList.toggle('hidden', mode !== 'DI');
+                
+                // Toggle Button Visuals
+                const offBtn = document.getElementById('btn-mode-offline');
+                const diBtn = document.getElementById('btn-mode-di');
+                
+                if (mode === 'Offline') {
+                    offBtn.className = "flex-1 py-1.5 text-xs font-bold rounded shadow bg-white dark:bg-slate-700 dark:text-white transition-all";
+                    diBtn.className = "flex-1 py-1.5 text-xs font-bold rounded text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all";
+                } else {
+                    diBtn.className = "flex-1 py-1.5 text-xs font-bold rounded shadow bg-white dark:bg-slate-700 dark:text-white transition-all";
+                    offBtn.className = "flex-1 py-1.5 text-xs font-bold rounded text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all";
+                }
+                
+                this.generate();
+            },
+
+            searchErrors(input) {
+                const val = input.value.toLowerCase();
+                const res = input.nextElementSibling;
+                if (!val) { res.classList.add('hidden'); return; }
+
+                const matches = DATA.errorCodes.filter(c => c.code.includes(val) || c.desc.toLowerCase().includes(val));
+                res.innerHTML = '';
+                res.classList.remove('hidden');
+
+                matches.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer text-xs dark:text-gray-300';
+                    div.innerHTML = `<strong>${m.code}</strong> - ${m.desc}`;
+                    div.onclick = () => {
+                        input.value = m.code;
+                        res.classList.add('hidden');
+                        this.generate();
+                    };
+                    res.appendChild(div);
+                });
+            },
+
+            generate() {
+                // Determine Mode
+                const isOffline = !document.getElementById('ng-fields-offline').classList.contains('hidden');
+                const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                let txt = "";
+
+                if (isOffline) {
+                    txt += `*** OFFLINE INTERACTION (${time}) ***\n`;
+                    
+                    const err = document.getElementById('ng-err1').value;
+                    const rsn = document.getElementById('ng-reason').value;
+                    if(err || rsn) txt += `Delay: ${err || '-'} | Reason: ${rsn || '-'}\n`;
+                    
+                    // Contact - Safety check applied
+                    const ans = document.querySelector('input[name="ng-ans"]:checked')?.value;
+                    if(ans) txt += `Contact: ${ans}\n`;
+                    
+                    const sms = [];
+                    // Safety checks for checkboxes
+                    const smsPre = document.getElementById('ng-sms-pre');
+                    const smsPost = document.getElementById('ng-sms-post');
+                    if(smsPre && smsPre.checked) sms.push('Pre');
+                    if(smsPost && smsPost.checked) sms.push('Post');
+                    if(sms.length) txt += `SMS Sent: ${sms.join(', ')}\n`;
+
+                    // Tags
+                    const tags = [];
+                    if(document.getElementById('ng-tag-res').checked) tags.push('#Resolved');
+                    if(document.getElementById('ng-tag-mob').checked) tags.push('#NoMobile');
+                    const ref = document.getElementById('ng-ref').value;
+                    if(ref) tags.push(`Ref:${ref}`);
+                    if(tags.length) txt += `Tags: ${tags.join(' ')}\n`;
+
+                } else {
+                    txt += `*** DI INTERACTION (${time}) ***\n`;
+                    const origin = document.querySelector('input[name="ng-di-org"]:checked')?.value;
+                    txt += `Origin: ${origin}\n`;
+                    if(origin === 'Guide') txt += `Flow: ${document.getElementById('ng-di-flow').value}\n`;
+                    const sum = document.getElementById('ng-di-sum').value;
+                    if(sum) txt += `Summary: ${sum}\n`;
+                }
+
+                const notes = document.getElementById('ng-notes').value;
+                if(notes) txt += `\nNOTES:\n${notes}`;
+
+                document.getElementById('ng-preview').value = txt;
+                this.saveState();
+            },
+
+            saveState() {
+                const state = {
+                    notes: document.getElementById('ng-notes').value,
+                    err: document.getElementById('ng-err1').value
+                    // Add more fields if full persistence needed
+                };
+                localStorage.setItem('ng_draft', JSON.stringify(state));
+                
+                const ind = document.getElementById('save-status');
+                ind.style.opacity = 1;
+                setTimeout(() => ind.style.opacity = 0, 1000);
+            },
+
+            loadState() {
+                const draft = JSON.parse(localStorage.getItem('ng_draft'));
+                if(draft) {
+                    if(draft.notes) document.getElementById('ng-notes').value = draft.notes;
+                    if(draft.err) document.getElementById('ng-err1').value = draft.err;
+                }
+            },
+
+            copy() {
+                const txt = document.getElementById('ng-preview').value;
+                navigator.clipboard.writeText(txt);
+                app.toast('Note Copied');
+                
+                // Add to History
+                this.history.unshift({ time: new Date().toLocaleTimeString(), preview: txt.substring(0, 50) + '...', full: txt });
+                if(this.history.length > 10) this.history.pop();
+                localStorage.setItem('ng_history', JSON.stringify(this.history));
+                this.renderHistory();
+            },
+
+            renderHistory() {
+                const list = document.getElementById('ng-history-list');
+                list.innerHTML = '';
+                
+                if (this.history.length === 0) {
+                    list.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 italic">No recent notes.</div>';
+                    return;
+                }
+
+                this.history.forEach(h => {
+                    const el = document.createElement('div');
+                    el.className = "p-2 bg-gray-50 dark:bg-slate-900 rounded border border-gray-100 dark:border-slate-700 text-xs cursor-pointer hover:border-bt-500 group";
+                    el.innerHTML = `
+                        <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                            <span>${h.time}</span>
+                            <span class="group-hover:text-bt-500">Restore</span>
+                        </div>
+                        <div class="truncate text-gray-600 dark:text-gray-300 font-mono">${h.preview}</div>
+                    `;
+                    el.onclick = () => {
+                        document.getElementById('ng-preview').value = h.full;
+                        navigator.clipboard.writeText(h.full);
+                        app.toast('History Item Copied');
+                    };
+                    list.appendChild(el);
+                });
+            },
+
+            clearNotes() {
+                document.getElementById('ng-notes').value = '';
+                this.generate();
+            },
+
+            clearHistory() {
+                this.history = [];
+                localStorage.removeItem('ng_history');
+                this.renderHistory();
+            }
+        };
+
+        // --- UTILITIES MODULE ---
+        const utilities = {
+            init() {
+                this.render();
+            },
+
+            render() {
+                const container = document.getElementById('util-grid');
+                container.innerHTML = '';
+                
+                DATA.links.forEach(section => {
+                    const secDiv = document.createElement('div');
+                    secDiv.className = 'util-section';
+                    secDiv.innerHTML = `<h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 border-b border-gray-200 dark:border-slate-700 pb-2">${section.title}</h3>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+                    
+                    section.items.forEach(item => {
+                        const card = document.createElement('a');
+                        card.href = item.url;
+                        card.target = "_blank";
+                        card.className = "util-card flex items-center p-4 bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-800 rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group";
+                        card.innerHTML = `
+                            <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-slate-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">${item.icon}</div>
+                            <div class="ml-4">
+                                <div class="font-bold text-gray-700 dark:text-gray-200 group-hover:text-bt-500 transition-colors">${item.name}</div>
+                                <div class="text-xs text-gray-400">Click to open</div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    
+                    secDiv.appendChild(grid);
+                    container.appendChild(secDiv);
+                });
+            },
+
+            filter() {
+                const term = document.getElementById('util-search').value.toLowerCase();
+                const sections = document.querySelectorAll('.util-section');
+                
+                sections.forEach(sec => {
+                    let hasVis = false;
+                    sec.querySelectorAll('.util-card').forEach(card => {
+                        const txt = card.textContent.toLowerCase();
+                        if (txt.includes(term)) {
+                            card.style.display = 'flex';
+                            hasVis = true;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    sec.style.display = hasVis ? 'block' : 'none';
+                });
+            }
+        };
+
+        // Boot
+        document.addEventListener('DOMContentLoaded', () => app.init());
+
+    </script>
+</body>
+</html>
